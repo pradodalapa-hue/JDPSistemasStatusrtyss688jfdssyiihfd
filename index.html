@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -364,7 +363,7 @@
             dadosConcluido = null;
         }
 
-        // --- MÁQUINA DE ESTADOS SOBERANA (FUSÃO DE DADOS EM TEMPO REAL) ---
+        // --- MÁQUINA DE ESTADOS SOBERANA (CORRIGIDA E BLINDADA) ---
         function processarFusaoDeEstados() {
             const btn = document.getElementById('btn-master');
             const painel = document.getElementById('painelStatus');
@@ -374,31 +373,31 @@
             painel.style.display = "flex";
             document.getElementById('idDisplay').innerText = `ID: #${idPedidoBuscado}`;
 
-            // ESTADO 1: ENTREGUE (Finalizado pelo PDV)
-            if (dadosConcluido || (dadosRastreio && (dadosRastreio.status === "entregue" || dadosRastreio.status === "CONCLUIDO" || dadosRastreio.expirado === true))) {
-                exibirEstadoConcluido();
-                return;
-            }
-
-            // ESTADO 2: A CAMINHO / EM ROTA (Despachado no PDV, na_pista: true)
+            // 1️⃣ PRIORIDADE MÁXIMA: SE ESTÁ EM ROTA, NUNCA PODE MOSTRAR COMO CONCLUÍDO
             if (dadosRastreio && (dadosRastreio.na_pista === true || dadosRastreio.status === "em_rota")) {
                 exibirEstadoEmRota();
                 return;
             }
 
-            // ESTADO 3: PRONTO (Marcado como Pronto na Cozinha ou Pronto para Entrega no Rastreio)
+            // 2️⃣ SE ESTÁ PRONTO NA COZINHA OU AGUARDANDO COLETA
             if ((dadosPendente && dadosPendente.status === "PRONTO") || (dadosRastreio && (dadosRastreio.status === "PRONTO_PARA_ENTREGA" || dadosRastreio.status === "PRONTO"))) {
                 exibirEstadoPronto();
                 return;
             }
 
-            // ESTADO 4: PEDIDO ACEITO NA COZINHA (Na esteira de produção)
+            // 3️⃣ SE ESTÁ SENDO PREPARADO NA COZINHA
             if (dadosPendente && (dadosPendente.status === "ESPERA" || dadosPendente.status === "PREPARANDO" || dadosPendente.status === "Pendente")) {
                 exibirEstadoPedidoAceito();
                 return;
             }
 
-            // ESTADO 5: AGUARDANDO CONFIRMAÇÃO DE PAGAMENTO
+            // 4️⃣ SÓ MOSTRA CONCLUÍDO SE REALMENTE ESTIVER NO NÓ DE CONCLUÍDOS E NÃO ESTIVER NA PISTA
+            if (dadosConcluido || (dadosRastreio && (dadosRastreio.status === "entregue" || dadosRastreio.status === "CONCLUIDO" || dadosRastreio.expirado === true))) {
+                exibirEstadoConcluido();
+                return;
+            }
+
+            // 5️⃣ AGUARDANDO PAGAMENTO
             if (dadosRastreio && dadosRastreio.giro_autorizado !== true) {
                 exibirEstadoAguardandoPagamento();
                 return;
